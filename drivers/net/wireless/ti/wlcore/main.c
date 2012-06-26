@@ -6154,6 +6154,22 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
 	wl->hw->offchannel_tx_hw_queue = wl->hw->queues - 1;
 	wl->hw->max_rates = 1;
 
+	/*
+	 * Some APs experience problems when working with U-APSD:
+	 * Cisco 4410N - It ignores our setting, and always treats
+	 * non-VO ACs as legacy.
+	 *
+	 * AVM FritzBox 7930 - Setting U-APSD on VO AC only (which
+	 * solves the Cisco 4410N problem) causes the FritzBox to
+	 * limit the rates of packets sent by it to 39Mbps and disables
+	 * AMPDU aggregation. This causes a major througput degradation
+	 * with this AP.
+	 *
+	 * Avoid these issues by using legacy mode for all ACs by default.
+	 * U-APSD can still be configured from userspace.
+	 */
+	wl->hw->uapsd_queues = 0;
+
 	wl->hw->wiphy->reg_notifier = wl1271_reg_notify;
 
 	/* the FW answers probe-requests in AP-mode */
