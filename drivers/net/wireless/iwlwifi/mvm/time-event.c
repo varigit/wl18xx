@@ -262,7 +262,7 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
 			     jiffies, te_data->end_jiffies);
 
 		if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
-			ieee80211_remain_on_channel_expired(mvm->hw);
+			ieee80211_remain_on_channel_expired(mvm->hw, 0);
 			iwl_mvm_roc_finished(mvm);
 		}
 
@@ -322,7 +322,7 @@ static int iwl_mvm_aux_roc_te_handle_notif(struct iwl_mvm *mvm,
 
 	if (le32_to_cpu(notif->action) == TE_V2_NOTIF_HOST_EVENT_END) {
 		/* End TE, notify mac80211 */
-		ieee80211_remain_on_channel_expired(mvm->hw);
+		ieee80211_remain_on_channel_expired(mvm->hw, 0);
 		iwl_mvm_roc_finished(mvm); /* flush aux queue */
 		list_del(&te_data->list); /* remove from list */
 		te_data->running = false;
