@@ -2212,7 +2212,7 @@ void __ath10k_scan_finish(struct ath10k *ar)
 		break;
 	case ATH10K_SCAN_RUNNING:
 		if (ar->scan.is_roc)
-			ieee80211_remain_on_channel_expired(ar->hw);
+			ieee80211_remain_on_channel_expired(ar->hw, 0);
 	case ATH10K_SCAN_ABORTING:
 		if (!ar->scan.is_roc)
 			ieee80211_scan_completed(ar->hw,
@@ -3877,7 +3877,8 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
 				    struct ieee80211_vif *vif,
 				    struct ieee80211_channel *chan,
 				    int duration,
-				    enum ieee80211_roc_type type)
+				    enum ieee80211_roc_type type,
+				    unsigned long cookie)
 {
 	struct ath10k *ar = hw->priv;
 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);

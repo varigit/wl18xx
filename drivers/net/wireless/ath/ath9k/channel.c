@@ -926,7 +926,7 @@ void ath_roc_complete(struct ath_softc *sc, bool abort)
 
 	sc->offchannel.roc_vif = NULL;
 	sc->offchannel.roc_chan = NULL;
-	ieee80211_remain_on_channel_expired(sc->hw);
+	ieee80211_remain_on_channel_expired(sc->hw, 0);
 	ath_offchannel_next(sc);
 	ath9k_ps_restore(sc);
 }
