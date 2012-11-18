@@ -356,6 +356,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
 	[NL80211_ATTR_SAE_DATA] = { .type = NLA_BINARY, },
 	[NL80211_ATTR_VHT_CAPABILITY] = { .len = NL80211_VHT_CAPABILITY_LEN },
 	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
+	[NL80211_ATTR_SCHED_SCAN_SHORT_INTERVAL] = { .type = NLA_U32 },
+	[NL80211_ATTR_SCHED_SCAN_NUM_SHORT_INTERVALS] = { .type = NLA_U8 },
 	[NL80211_ATTR_P2P_CTWINDOW] = { .type = NLA_U8 },
 	[NL80211_ATTR_P2P_OPPPS] = { .type = NLA_U8 },
 	[NL80211_ATTR_ACL_POLICY] = {. type = NLA_U32 },
@@ -5907,7 +5909,8 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
 	struct cfg80211_sched_scan_request *request;
 	struct nlattr *attr;
 	int err, tmp, n_ssids = 0, n_match_sets = 0, n_channels, i;
-	u32 interval;
+	u32 long_interval = 0, short_interval = 0;
+	u8 n_short_intervals = 0;
 	enum ieee80211_band band;
 	size_t ie_len;
 	struct nlattr *tb[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1];
@@ -5919,9 +5922,24 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
 	if (!attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
 		return ERR_PTR(-EINVAL);
 
-	interval = nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
-	if (interval == 0)
+	long_interval = nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
+	if (long_interval == 0)
 		return ERR_PTR(-EINVAL);
+
+	if (attrs[NL80211_ATTR_SCHED_SCAN_SHORT_INTERVAL]) {
+		if (!(wiphy->features & NL80211_FEATURE_SCHED_SCAN_INTERVALS))
+			return ERR_PTR(-EOPNOTSUPP);
+
+		if (!attrs[NL80211_ATTR_SCHED_SCAN_NUM_SHORT_INTERVALS])
+			return ERR_PTR(-EINVAL);
+
+		n_short_intervals = nla_get_u8(
+			attrs[NL80211_ATTR_SCHED_SCAN_NUM_SHORT_INTERVALS]);
+		short_interval = nla_get_u32(
+			attrs[NL80211_ATTR_SCHED_SCAN_SHORT_INTERVAL]);
+		if (short_interval == 0)
+			return ERR_PTR(-EINVAL);
+	}
 
 	if (attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
 		n_channels = validate_scan_freqs(
@@ -6174,8 +6192,10 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
 		}
 	}
 
-	request->interval = interval;
 	request->scan_start = jiffies;
+	request->long_interval = long_interval;
+	request->short_interval = short_interval;
+	request->n_short_intervals = n_short_intervals;
 
 	return request;
 
