@@ -1391,7 +1391,9 @@ enum nl80211_commands {
  *	triggers.
  *
  * @NL80211_ATTR_SCHED_SCAN_INTERVAL: Interval between scheduled scan
- *	cycles, in msecs.
+ *	cycles, in msecs. If short interval is supported by the driver
+ *      and configured then this will be used only after the requested
+ *      number of short intervals
  *
  * @NL80211_ATTR_SCHED_SCAN_MATCH: Nested attribute with one or more
  *	sets of attributes to match during scheduled scans.  Only BSSs
@@ -1690,6 +1692,11 @@ enum nl80211_commands {
  *	If set during scheduled scan start then the new scan req will be
  *	owned by the netlink socket that created it and the scheduled scan will
  *	be stopped when the socket is closed.
+ *
+ * @NL80211_ATTR_SCHED_SCAN_SHORT_INTERVAL: interval between
+ *      each short interval scheduled scan cycle in msecs.
+ * @NL80211_ATTR_SCHED_SCAN_NUM_SHORT_INTERVALS: number of short
+ *      sched scan intervals before switching to the long interval
  *
  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
  *	the TDLS link initiator.
@@ -2091,6 +2098,9 @@ enum nl80211_attrs {
 	NL80211_ATTR_SCAN_MIN_DWELL = NL80211_ATTR_TDLS_PEER_CAPABILITY + 30,
 	NL80211_ATTR_SCAN_MAX_DWELL,
 	NL80211_ATTR_SCAN_NUM_PROBE,
+
+	NL80211_ATTR_SCHED_SCAN_SHORT_INTERVAL,
+	NL80211_ATTR_SCHED_SCAN_NUM_SHORT_INTERVALS,
 
 	/* add attributes here, update the policy in nl80211.c */
 
@@ -4238,6 +4248,9 @@ enum nl80211_feature_flags {
 	NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR		= 1 << 29,
 	NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR	= 1 << 30,
 	NL80211_FEATURE_ND_RANDOM_MAC_ADDR		= 1 << 31,
+
+	/* TODO: Use new feature bit when available. temporarily reuse existing one! */
+	NL80211_FEATURE_SCHED_SCAN_INTERVALS  = 1 << 20,
 };
 
 /**
