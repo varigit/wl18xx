@@ -263,6 +263,12 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
 		goto end_no_lock;
 	}
 
+	if (tid == 6 || tid == 7) {
+		ht_dbg(sta->sdata, "ADDBA on VO AC TID %d - Deny request\n",
+		       tid);
+		goto end_no_lock;
+	}
+
 	/* sanity check for incoming parameters:
 	 * check if configuration can support the BA policy
 	 * and if buffer size does not exceeds max value */
