@@ -1702,6 +1702,9 @@ static struct wlcore_ops wl18xx_ops = {
 	.interrupt_notify = wl18xx_acx_interrupt_notify_config,
 	.rx_ba_filter	= wl18xx_acx_rx_ba_filter,
 	.ap_sleep	= wl18xx_acx_ap_sleep,
+	.smart_config_start = wl18xx_cmd_smart_config_start,
+	.smart_config_stop  = wl18xx_cmd_smart_config_stop,
+	.smart_config_set_group_key = wl18xx_cmd_smart_config_set_group_key,
 };
 
 /* HT cap appropriate for wide channels in 2Ghz */
