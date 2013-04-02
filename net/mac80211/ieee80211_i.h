@@ -1108,6 +1108,7 @@ struct ieee80211_local {
 	 * via ieee80211_queue_work()
 	 */
 	struct workqueue_struct *workqueue;
+	struct workqueue_struct *freezable_workqueue;
 
 	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
 	int q_stop_reasons[IEEE80211_MAX_QUEUES][IEEE80211_QUEUE_STOP_REASONS];
