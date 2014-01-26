@@ -650,7 +650,7 @@ static const struct wl18xx_clk_cfg wl18xx_clk_table[NUM_CLOCK_CONFIGS] = {
 };
 
 /* TODO: maybe move to a new header file? */
-#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw-3.bin"
+#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw-4.bin"
 
 static int wl18xx_identify_chip(struct wl1271 *wl)
 {
@@ -985,6 +985,7 @@ static int wl18xx_boot(struct wl1271 *wl)
 
 	wl->event_mask = BSS_LOSS_EVENT_ID |
 		SCAN_COMPLETE_EVENT_ID |
+		RADAR_DETECTED_EVENT_ID |
 		RSSI_SNR_TRIGGER_0_EVENT_ID |
 		PERIODIC_SCAN_COMPLETE_EVENT_ID |
 		PERIODIC_SCAN_REPORT_EVENT_ID |
