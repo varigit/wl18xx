@@ -38,6 +38,8 @@ unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
 				   const struct ieee80211_reg_rule *rule);
 
 bool reg_last_request_cell_base(void);
+void reg_call_notifier(struct wiphy *wiphy,
+		       struct regulatory_request *request);
 
 /**
  * regulatory_hint_found_beacon - hints a beacon was found on a channel
