@@ -388,22 +388,31 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
 	return NULL;
 }
 
-static bool ieee80211_is_radar_required(struct ieee80211_local *local)
+static bool ieee80211_is_radar_required(struct ieee80211_local *local,
+					struct ieee80211_chanctx *ctx)
 {
+	struct ieee80211_chanctx_conf *conf = &ctx->conf;
 	struct ieee80211_sub_if_data *sdata;
+	bool required = false;
 
+	lockdep_assert_held(&local->chanctx_mtx);
 	lockdep_assert_held(&local->mtx);
 
 	rcu_read_lock();
 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-		if (sdata->radar_required) {
-			rcu_read_unlock();
-			return true;
-		}
+		if (!ieee80211_sdata_running(sdata))
+			continue;
+		if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf)
+			continue;
+		if (!sdata->radar_required)
+			continue;
+
+		required = true;
+		break;
 	}
 	rcu_read_unlock();
 
-	return false;
+	return required;
 }
 
 static struct ieee80211_chanctx *
@@ -425,7 +434,7 @@ ieee80211_alloc_chanctx(struct ieee80211_local *local,
 	ctx->conf.rx_chains_static = 1;
 	ctx->conf.rx_chains_dynamic = 1;
 	ctx->mode = mode;
-	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
+	ctx->conf.radar_enabled = ieee80211_is_radar_required(local, ctx);
 	ieee80211_recalc_chanctx_min_def(local, ctx);
 
 	return ctx;
@@ -570,7 +579,7 @@ static void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
 	/* for setting local->radar_detect_enabled */
 	lockdep_assert_held(&local->mtx);
 
-	radar_enabled = ieee80211_is_radar_required(local);
+	radar_enabled = ieee80211_is_radar_required(local, chanctx);
 
 	if (radar_enabled == chanctx->conf.radar_enabled)
 		return;
