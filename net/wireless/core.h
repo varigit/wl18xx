@@ -433,6 +433,13 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
 			    const struct cfg80211_chan_def *chandef,
 			    enum nl80211_dfs_state dfs_state);
 
+enum dfs_reset_flags {
+	DFS_RESET_AVAILABLE	= BIT(0),
+	DFS_RESET_UNAVAILABLE	= BIT(1),
+};
+
+void cfg80211_reset_dfs_channels(struct wiphy *wiphy, int flags);
+
 void cfg80211_dfs_channels_update_work(struct work_struct *work);
 
 unsigned int

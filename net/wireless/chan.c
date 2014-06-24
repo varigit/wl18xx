@@ -10,6 +10,7 @@
 #include <linux/export.h>
 #include <net/cfg80211.h>
 #include "core.h"
+#include "nl80211.h"
 #include "rdev-ops.h"
 
 void cfg80211_chandef_create(struct cfg80211_chan_def *chandef,
@@ -278,6 +279,49 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
 				     width, dfs_state);
 notify:
 	reg_call_notifier(wiphy, NULL);
+}
+
+void cfg80211_reset_dfs_channels(struct wiphy *wiphy, int flags)
+{
+	enum ieee80211_band band;
+	struct ieee80211_supported_band *sband;
+	struct ieee80211_channel *chan;
+	struct cfg80211_chan_def chandef = {};
+	int i;
+
+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+		sband = wiphy->bands[band];
+		if (!sband)
+			continue;
+
+		for (i = 0; i < sband->n_channels; i++) {
+			chan = &sband->channels[i];
+			if (!(chan->flags & IEEE80211_CHAN_RADAR))
+				continue;
+
+			cfg80211_chandef_create(&chandef, chan,
+						NL80211_CHAN_NO_HT);
+
+			if (flags & DFS_RESET_AVAILABLE &&
+			    chan->dfs_state == NL80211_DFS_AVAILABLE) {
+				chan->dfs_state = NL80211_DFS_USABLE;
+				chan->dfs_state_entered = jiffies;
+			}
+
+			if (flags & DFS_RESET_UNAVAILABLE &&
+			    chan->dfs_state == NL80211_DFS_UNAVAILABLE) {
+				chan->dfs_state = NL80211_DFS_USABLE;
+				chan->dfs_state_entered = jiffies;
+
+				chan->dfs_state = NL80211_DFS_USABLE;
+				nl80211_radar_notify(wiphy_to_rdev(wiphy),
+					&chandef,
+					NL80211_RADAR_NOP_FINISHED,
+					NULL, GFP_ATOMIC);
+
+			}
+		}
+	}
 }
 
 static u32 cfg80211_get_start_freq(u32 center_freq,
