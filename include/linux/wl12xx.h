@@ -59,7 +59,7 @@ struct wl12xx_platform_data {
 	int irq;
 	int board_ref_clock;
 	int board_tcxo_clock;
-	unsigned long platform_quirks;
+	u32 platform_quirks;
 	bool pwr_in_suspend;
 };
 

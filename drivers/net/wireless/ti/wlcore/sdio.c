@@ -240,6 +240,11 @@ static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
 		return NULL;
 	}
 
+	/* Optional fields */
+	of_property_read_u32(np, "board-ref-clock", &pdata->board_ref_clock);
+	of_property_read_u32(np, "board-tcxo-clock", &pdata->board_tcxo_clock);
+	of_property_read_u32(np, "platform-quirks", &pdata->platform_quirks);
+
 	return pdata;
 }
 #else
