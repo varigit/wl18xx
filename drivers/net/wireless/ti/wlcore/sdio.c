@@ -221,23 +221,27 @@ static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
 {
 	struct device_node *np = dev->of_node;
 	struct wl12xx_platform_data *pdata;
+	bool need_put_node = false;
 
 	if (!np || !of_device_is_compatible(np, "ti,wlcore")) {
-		dev_err(dev, "No platform data set\n");
-		return NULL;
+		np = of_find_compatible_node(NULL, NULL, "ti,wlcore");
+		if (!np) {
+			dev_err(dev, "No platform data set\n");
+			return NULL;
+		}
+		need_put_node = true;
 	}
 
 	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
 	if (!pdata) {
 		dev_err(dev, "Can't allocate platform data\n");
-		return NULL;
+		goto err;
 	}
 
 	pdata->irq = irq_of_parse_and_map(np, 0);
 	if (!pdata->irq) {
 		dev_err(dev, "No irq in platform data\n");
-		kfree(pdata);
-		return NULL;
+		goto err;
 	}
 
 	/* Optional fields */
@@ -246,6 +250,11 @@ static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
 	of_property_read_u32(np, "platform-quirks", &pdata->platform_quirks);
 
 	return pdata;
+err:
+	if (need_put_node)
+		of_node_put(np);
+	kfree(pdata);
+	return NULL;
 }
 #else
 static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
