@@ -341,6 +341,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
 	set_bit(SCAN_COMPLETED, &local->scanning);
 	if (aborted)
 		set_bit(SCAN_ABORTED, &local->scanning);
+	printk(KERN_INFO "EPBUG: %s - local->scanning = 0x%lx\n", __func__, local->scanning);
 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, 0);
 }
 EXPORT_SYMBOL(ieee80211_scan_completed);
@@ -380,6 +381,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
 	/* We need to set power level at maximum rate for scanning. */
 	ieee80211_hw_config(local, 0);
 
+	printk(KERN_INFO "EPBUG: %s - local->scanning = 0x%lx\n", __func__, local->scanning);
 	ieee80211_queue_delayed_work(&local->hw,
 				     &local->scan_work, 0);
 
@@ -412,6 +414,7 @@ void ieee80211_run_deferred_scan(struct ieee80211_local *local)
 					lockdep_is_held(&local->mtx))))
 		return;
 
+printk(KERN_INFO "EPBUG: %s - local->scanning = 0x%lx\n", __func__, local->scanning);
 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work,
 				     round_jiffies_relative(0));
 }
@@ -754,6 +757,8 @@ void ieee80211_scan_work(struct work_struct *work)
 	sdata = rcu_dereference_protected(local->scan_sdata,
 					  lockdep_is_held(&local->mtx));
 
+	printk(KERN_INFO "EPBUG: %s(%d) - local->scanning = 0x%lx\n", __func__, __LINE__, local->scanning);
+
 	/* When scanning on-channel, the first-callback means completed. */
 	if (test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning)) {
 		aborted = test_and_clear_bit(SCAN_ABORTED, &local->scanning);
@@ -768,6 +773,7 @@ void ieee80211_scan_work(struct work_struct *work)
 	if (!sdata || !local->scan_req)
 		goto out;
 
+	printk(KERN_INFO "EPBUG: %s(%d) - local->scanning = 0x%lx\n", __func__, __LINE__, local->scanning);
 	if (local->scan_req && !local->scanning) {
 		struct cfg80211_scan_request *req = local->scan_req;
 		int rc;
@@ -822,6 +828,7 @@ void ieee80211_scan_work(struct work_struct *work)
 		}
 	} while (next_delay == 0);
 
+	printk(KERN_INFO "EPBUG: %s(%d) - local->scanning = 0x%lx\n", __func__, __LINE__, local->scanning);
 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
 	goto out;
 
