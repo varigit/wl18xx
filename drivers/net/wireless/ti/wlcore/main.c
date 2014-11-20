@@ -4262,12 +4262,6 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
 		if (bss_conf->enable_beacon) {
 			if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
-				/* no need to cac when ap is started */
-				if (wlvif->radar_enabled) {
-					wlcore_set_cac(wl, wlvif, false);
-					wlvif->radar_enabled= false;
-				}
-
 				ret = wl12xx_cmd_role_start_ap(wl, wlvif);
 				if (ret < 0)
 					goto out;
@@ -4764,7 +4758,8 @@ static void wlcore_op_change_chanctx(struct ieee80211_hw *hw,
 		/* start radar if needed */
 		if (changed & IEEE80211_CHANCTX_CHANGE_RADAR &&
 		    wlvif->bss_type == BSS_TYPE_AP_BSS &&
-		    ctx->radar_enabled && !wlvif->radar_enabled) {
+		    ctx->radar_enabled && !wlvif->radar_enabled &&
+		    ctx->def.chan->dfs_state == NL80211_DFS_USABLE) {
 			wl1271_debug(DEBUG_MAC80211, "Start radar detection");
 			wlcore_set_cac(wl, wlvif, true);
 			wlvif->radar_enabled = true;
@@ -4787,8 +4782,10 @@ static int wlcore_op_assign_vif_chanctx(struct ieee80211_hw *hw,
 	int ret = -EINVAL;
 
 	wl1271_debug(DEBUG_MAC80211,
-		     "mac80211 assign chanctx (role %d) %d (type %d)",
-		     wlvif->role_id, channel, cfg80211_get_chandef_type(&ctx->def));
+		     "mac80211 assign chanctx (role %d) %d (type %d) (radar %d dfs_state %d)",
+		     wlvif->role_id, channel,
+		     cfg80211_get_chandef_type(&ctx->def),
+		     ctx->radar_enabled, ctx->def.chan->dfs_state);
 
 	mutex_lock(&wl->mutex);
 
@@ -4809,7 +4806,8 @@ static int wlcore_op_assign_vif_chanctx(struct ieee80211_hw *hw,
 	/* update default rates according to the band */
 	wl1271_set_band_rate(wl, wlvif);
 
-	if (ctx->radar_enabled) {
+	if (ctx->radar_enabled &&
+	    ctx->def.chan->dfs_state == NL80211_DFS_USABLE) {
 		wl1271_debug(DEBUG_MAC80211, "Start radar detection...");
 		wlcore_set_cac(wl, wlvif, true);
 		wlvif->radar_enabled = true;
