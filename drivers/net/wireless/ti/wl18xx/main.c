@@ -1003,10 +1003,7 @@ static int wl18xx_boot(struct wl1271 *wl)
 		INACTIVE_STA_EVENT_ID |
 		CHANNEL_SWITCH_COMPLETE_EVENT_ID |
 		DFS_CHANNELS_CONFIG_COMPLETE_EVENT |
-		RX_BA_WIN_SIZE_CHANGE_EVENT_ID |
-		SMART_CONFIG_SYNC_EVENT_ID |
-		SMART_CONFIG_DECODE_EVENT_ID;
-;
+		RX_BA_WIN_SIZE_CHANGE_EVENT_ID;
 
 	wl->ap_event_mask = MAX_TX_FAILURE_EVENT_ID;
 
@@ -1702,9 +1699,6 @@ static struct wlcore_ops wl18xx_ops = {
 	.convert_hwaddr = wl18xx_convert_hwaddr,
 	.lnk_high_prio	= wl18xx_lnk_high_prio,
 	.lnk_low_prio	= wl18xx_lnk_low_prio,
-	.smart_config_start = wl18xx_cmd_smart_config_start,
-	.smart_config_stop  = wl18xx_cmd_smart_config_stop,
-	.smart_config_set_group_key = wl18xx_cmd_smart_config_set_group_key,
 	.interrupt_notify = wl18xx_acx_interrupt_notify_config,
 	.rx_ba_filter	= wl18xx_acx_rx_ba_filter,
 	.ap_sleep	= wl18xx_acx_ap_sleep,
