@@ -225,10 +225,9 @@ static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
 
 	if (!np || !of_device_is_compatible(np, "ti,wlcore")) {
 		np = of_find_compatible_node(NULL, NULL, "ti,wlcore");
-		if (!np) {
-			dev_err(dev, "No platform data set\n");
+		if (!np)
 			return NULL;
-		}
+
 		need_put_node = true;
 	}
 
@@ -263,20 +262,65 @@ static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
 }
 #endif
 
+static const struct of_device_id wlcore_of_match[] = {
+	{
+		.compatible = "wlcore",
+	},
+	{}
+};
+MODULE_DEVICE_TABLE(of, wlcore_of_match);
+
 static struct wl12xx_platform_data *
 wlcore_get_platform_data(struct device *dev)
 {
 	struct wl12xx_platform_data *pdata;
+	struct device_node __maybe_unused *np;
 
 	pdata = wl12xx_get_platform_data();
 	if (!IS_ERR(pdata))
 		return kmemdup(pdata, sizeof(*pdata), GFP_KERNEL);
 
-	return wlcore_probe_of(dev);
+	/* first, try looking for "upstream" dt */
+	pdata = wlcore_probe_of(dev);
+	if (pdata)
+		return pdata;
+
+	np = of_find_matching_node(NULL, wlcore_of_match);
+	if (!np) {
+		dev_err(dev, "No platform data set\n");
+		return NULL;
+	}
+
+	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
+	if (!pdata) {
+		dev_err(dev, "Can't allocate platform data\n");
+		return NULL;
+	}
+
+	if (of_property_read_u32(np, "irq", &pdata->irq)) {
+		u32 gpio;
+
+		if (!of_property_read_u32(np, "gpio", &gpio) &&
+		    !gpio_request_one(gpio, GPIOF_IN, "wlcore_irq")) {
+			pdata->gpio = gpio;
+			pdata->irq = gpio_to_irq(gpio);
+		}
+	}
+
+	/* Optional fields */
+	pdata->use_eeprom = of_property_read_bool(np, "use-eeprom");
+	of_property_read_u32(np, "board-ref-clock", &pdata->board_ref_clock);
+	of_property_read_u32(np, "board-tcxo-clock", &pdata->board_tcxo_clock);
+	of_property_read_u32(np, "platform-quirks", &pdata->platform_quirks);
+
+	return pdata;
 }
 
 static void wlcore_del_platform_data(struct wl12xx_platform_data *pdata)
 {
+	if (pdata->gpio)
+		gpio_free(pdata->gpio);
+
 	kfree(pdata);
 }
 
