@@ -2626,6 +2626,9 @@ void ieee80211_dfs_radar_detected_work(struct work_struct *work)
 		if (ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER)
 			continue;
 
+		if (!ctx->conf.radar_enabled)
+			continue;
+
 		num_chanctx++;
 		chandef = ctx->conf.def;
 	}
