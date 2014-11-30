@@ -23,6 +23,7 @@
 #define __WLCORE_H__
 
 #include <linux/platform_device.h>
+#include <linux/timer.h>
 
 #include "wlcore_i.h"
 #include "event.h"
@@ -186,6 +187,11 @@ struct wlcore_aggr_reason {
 	u32 fw_buffer_full;
 	u32 other;
 	u32 no_data;
+};
+
+struct wlcore_clock_sync {
+	struct timer_list timer;
+	u32	timeout;
 };
 
 struct wl1271 {
@@ -522,6 +528,10 @@ struct wl1271 {
 	/* the current dfs region */
 	enum nl80211_dfs_regions dfs_region;
 	bool radar_debug_mode;
+
+	/* clock sync timer */
+	struct wlcore_clock_sync clock_sync;
+
 };
 
 int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);

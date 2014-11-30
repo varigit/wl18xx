@@ -26,6 +26,7 @@
 #include <linux/skbuff.h>
 #include <linux/slab.h>
 #include <linux/module.h>
+#include <linux/gpio.h>
 
 #include "wlcore.h"
 #include "debug.h"
@@ -87,6 +88,19 @@ EXPORT_SYMBOL_GPL(wl1271_debugfs_update_stats);
 DEBUGFS_READONLY_FILE(retry_count, "%u", wl->stats.retry_count);
 DEBUGFS_READONLY_FILE(excessive_retries, "%u",
 		      wl->stats.excessive_retries);
+
+
+void clock_sync_timer_callback(unsigned long data)
+{
+	struct wlcore_clock_sync *clock_sync_cb = (struct wlcore_clock_sync *)data;
+	static u8 gpio_clock_sync_value = 0;
+
+	gpio_set_value(66, (gpio_clock_sync_value ^= 1));
+
+	wl1271_error("GPIO SET with value %d",gpio_clock_sync_value);
+
+	mod_timer(&clock_sync_cb->timer, jiffies + msecs_to_jiffies(clock_sync_cb->timeout));
+}
 
 static ssize_t tx_queue_len_read(struct file *file, char __user *userbuf,
 				 size_t count, loff_t *ppos)
@@ -1293,6 +1307,45 @@ static const struct file_operations sleep_auth_ops = {
 	.llseek = default_llseek,
 };
 
+static ssize_t clock_sync_write(struct file *file,
+                const char __user *user_buf,
+                size_t count, loff_t *ppos)
+{
+    struct wl1271 *wl = file->private_data;    
+    unsigned long value;
+    int ret;
+
+    ret = kstrtoul_from_user(user_buf, count, 0, &value);
+    if (ret < 0) {
+        wl1271_warning("illegal value for clock sync");
+        return -EINVAL;
+    }
+
+    if (value > 1000) {
+        wl1271_warning("clock sync interval must be between 0 and %d",
+                   1000);
+        return -ERANGE;
+    }
+
+	wl->clock_sync.timeout = value;
+
+	if (value == 0) {
+		del_timer(&wl->clock_sync.timer);
+	}
+	else {
+		wl->clock_sync.timer.data = (unsigned long)&wl->clock_sync;
+   		mod_timer(&wl->clock_sync.timer, jiffies + msecs_to_jiffies(value));
+	}
+
+    return count;
+}
+
+static const struct file_operations clock_sync_ops = {
+    .write = clock_sync_write,
+    .open = simple_open,
+    .llseek = default_llseek,
+};
+
 static ssize_t dev_mem_read(struct file *file,
 	     char __user *user_buf, size_t count,
 	     loff_t *ppos)
@@ -1514,6 +1567,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
 	DEBUGFS_ADD(irq_timeout, rootdir);
 	DEBUGFS_ADD(fw_stats_raw, rootdir);
 	DEBUGFS_ADD(sleep_auth, rootdir);
+	DEBUGFS_ADD(clock_sync, rootdir);
 	DEBUGFS_ADD(tx_num_comp, rootdir);
 	DEBUGFS_ADD(rx_num_comp, rootdir);
 	DEBUGFS_ADD(tx_compl_timeout, rootdir);
@@ -1571,6 +1625,9 @@ int wl1271_debugfs_init(struct wl1271 *wl)
 
 	wl->stats.fw_stats_update = jiffies;
 
+	setup_timer(&wl->clock_sync.timer, clock_sync_timer_callback, 0);
+	gpio_request_one(66, GPIOF_DIR_OUT, "audio_sync");
+
 	ret = wl1271_debugfs_add_files(wl, rootdir);
 	if (ret < 0)
 		goto out_exit;
@@ -1595,4 +1652,5 @@ void wl1271_debugfs_exit(struct wl1271 *wl)
 {
 	kfree(wl->stats.fw_stats);
 	wl->stats.fw_stats = NULL;
+	del_timer(&wl->clock_sync.timer);
 }
