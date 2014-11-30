@@ -56,11 +56,20 @@ struct wl1251_platform_data {
 };
 
 struct wl12xx_platform_data {
+	void (*set_power)(bool enable);
+	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
 	int irq;
+	bool use_eeprom;
 	int board_ref_clock;
 	int board_tcxo_clock;
 	u32 platform_quirks;
 	bool pwr_in_suspend;
+
+	/*
+	 * Note: this might not exist in older kernels.
+	 * avoid reading/writing it if not sure.
+	 */
+	int gpio;
 };
 
 /* Platform does not support level trigger interrupts */
