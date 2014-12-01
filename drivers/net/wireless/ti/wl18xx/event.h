@@ -39,8 +39,9 @@ enum {
 	DFS_CHANNELS_CONFIG_COMPLETE_EVENT       = BIT(19),
 	PERIODIC_SCAN_REPORT_EVENT_ID            = BIT(20),
 	RX_BA_WIN_SIZE_CHANGE_EVENT_ID           = BIT(21),
-	SMART_CONFIG_SYNC_EVENT_ID		 = BIT(22),
-	SMART_CONFIG_DECODE_EVENT_ID		 = BIT(23),
+	SMART_CONFIG_SYNC_EVENT_ID		 		 = BIT(22),
+	SMART_CONFIG_DECODE_EVENT_ID		 	 = BIT(23),
+	AUDIO_SYNC_EVENT_ID						 = BIT(24),
 
 };
 
@@ -75,7 +76,7 @@ struct wl18xx_event_mailbox {
 	__le16 bss_loss_bitmap;
 
 	/* bitmap of stations (by HLID) which exceeded max tx retries */
-	__le32 tx_retry_exceeded_bitmap;
+	/*__le32 tx_retry_exceeded_bitmap;*/
 
 	/* bitmap of inactive stations (by HLID) */
 	__le32 inactive_sta_bitmap;
@@ -103,8 +104,11 @@ struct wl18xx_event_mailbox {
 	/* radar detect */
 	u8 radar_channel;
 	u8 radar_type;
-
 	u8 padding3[2];
+
+    /* clock sync */
+    u32 audio_sync_clock;
+
 } __packed;
 
 int wl18xx_wait_for_event(struct wl1271 *wl, enum wlcore_wait_event event,

@@ -181,7 +181,7 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
 	 */
 	if (vector & MAX_TX_FAILURE_EVENT_ID)
 		wlcore_event_max_tx_failure(wl,
-				le32_to_cpu(mbox->tx_retry_exceeded_bitmap));
+				le32_to_cpu(0/*mbox->tx_retry_exceeded_bitmap*/));
 
 	if (vector & INACTIVE_STA_EVENT_ID)
 		wlcore_event_inactive_sta(wl,
@@ -200,6 +200,9 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
 						 mbox->sc_ssid,
 						 mbox->sc_pwd_len,
 						 mbox->sc_pwd);
+
+	if (vector & AUDIO_SYNC_EVENT_ID)
+	    wlcore_event_clock_sync(wl, mbox->audio_sync_clock);
 
 	if (vector & RX_BA_WIN_SIZE_CHANGE_EVENT_ID) {
 		struct wl12xx_vif *wlvif;

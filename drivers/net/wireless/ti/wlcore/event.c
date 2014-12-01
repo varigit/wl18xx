@@ -209,6 +209,13 @@ void wlcore_event_max_tx_failure(struct wl1271 *wl, unsigned long sta_bitmap)
 }
 EXPORT_SYMBOL_GPL(wlcore_event_max_tx_failure);
 
+void wlcore_event_clock_sync(struct wl1271 *wl, u32 clock)
+{
+    wl1271_info("AUDIO_SYNC_EVENT_ID");
+    wl1271_info("%d",clock);
+}
+EXPORT_SYMBOL_GPL(wlcore_event_clock_sync);
+
 void wlcore_event_inactive_sta(struct wl1271 *wl, unsigned long sta_bitmap)
 {
 	wl1271_debug(DEBUG_EVENT, "INACTIVE_STA_EVENT_ID");
