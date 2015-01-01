@@ -629,10 +629,12 @@ out:
 
 	sdata->vif.bss_conf.idle = !conf;
 
+	if (curr_ctx)
+		ieee80211_recalc_radar_chanctx(local, curr_ctx);
+
 	if (curr_ctx && ieee80211_chanctx_num_assigned(local, curr_ctx) > 0) {
 		ieee80211_recalc_chanctx_chantype(local, curr_ctx);
 		ieee80211_recalc_smps_chanctx(local, curr_ctx);
-		ieee80211_recalc_radar_chanctx(local, curr_ctx);
 		ieee80211_recalc_chanctx_min_def(local, curr_ctx);
 	}
 
