@@ -7774,19 +7774,14 @@ static int nl80211_wiphy_netns(struct sk_buff *skb, struct genl_info *info)
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	struct net *net;
 	int err;
+	u32 pid;
 
-	if (info->attrs[NL80211_ATTR_PID]) {
-		u32 pid = nla_get_u32(info->attrs[NL80211_ATTR_PID]);
-
-		net = get_net_ns_by_pid(pid);
-	} else if (info->attrs[NL80211_ATTR_NETNS_FD]) {
-		u32 fd = nla_get_u32(info->attrs[NL80211_ATTR_NETNS_FD]);
-
-		net = get_net_ns_by_fd(fd);
-	} else {
+	if (!info->attrs[NL80211_ATTR_PID])
 		return -EINVAL;
-	}
 
+	pid = nla_get_u32(info->attrs[NL80211_ATTR_PID]);
+
+	net = get_net_ns_by_pid(pid);
 	if (IS_ERR(net))
 		return PTR_ERR(net);
 
