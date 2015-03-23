@@ -26,6 +26,9 @@
 #include "wme.h"
 #include "rate.h"
 
+typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
+				       struct sk_buff *skb);
+
 /**
  * DOC: Interface list locking
  *
