@@ -51,6 +51,9 @@
 #include <linux/neighbour.h>
 #include <uapi/linux/netdevice.h>
 
+typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
+				       struct sk_buff *skb);
+
 struct netpoll_info;
 struct device;
 struct phy_device;
